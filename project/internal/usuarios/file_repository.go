@@ -1,6 +1,10 @@
 package usuarios
 
-import "github.com/cesar-oliveira-silva/goweb-aula-4-exec-manha.git/project/pkg/store"
+import (
+	"fmt"
+
+	"github.com/cesar-oliveira-silva/goweb-aula-4-exec-manha.git/project/pkg/store"
+)
 
 type FileRepository struct {
 	db store.Store
@@ -52,14 +56,88 @@ func (r *FileRepository) Store(nome string, sobrenome string, email string, idad
 }
 
 func (r *FileRepository) Delete(id uint64) error {
+	deleted := false
+	var index int
+	var usuarios []Usuario
+	// primeiro lemos o arquivo
+	r.db.Read(&usuarios)
+	// iteramos a lista de usuarios para encontrar o usuario com id correspondente e o removemos
+
+	for i := range usuarios {
+		if usuarios[i].Id == id {
+			index = i
+			deleted = true
+		}
+	}
+
+	if !deleted {
+		return fmt.Errorf("Usuario %d nao encontrado", id)
+	}
+
+	usuarios = append(usuarios[:index], usuarios[index+1:]...)
+
+	// gravamos no arquivo novamente com o usuario removido
+	err := r.db.Write(usuarios)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (r *FileRepository) Update(id uint64, nome string, sobrenome string, email string, idade int, altura int, ativo bool, datacriacao string) (Usuario, error) {
-	return Usuario{}, nil
+
+	usuario := Usuario{id, nome, sobrenome, email, idade, altura, ativo, datacriacao}
+	updated := false
+	var usuarios []Usuario
+
+	// primeiro lemos o arquivo
+	r.db.Read(&usuarios)
+	fmt.Println("usuarios lidos: ", usuarios)
+	// iteramos a lista de usuarios para encontrar o usuario com id correspondente e o atualizamos
+	for i := range usuarios {
+		if usuarios[i].Id == usuario.Id {
+			usuarios[i] = usuario
+			updated = true
+		}
+	}
+	if !updated {
+		return Usuario{}, fmt.Errorf("Usuario %d nao encontrado", id)
+	}
+	// gravamos no arquivo novamente com o usuario atualizado
+	err := r.db.Write(usuarios)
+	if err != nil {
+		return Usuario{}, err
+	}
+	return usuario, nil
+
 }
 func (r *FileRepository) UpdateName(id uint64, name string) (Usuario, error) {
-	return Usuario{}, nil
+	updated := false
+	var usuarios []Usuario
+
+	// primeiro lemos o arquivo
+	r.db.Read(&usuarios)
+	fmt.Println("usuarios lidos: ", usuarios)
+	// iteramos a lista de usuarios para encontrar o usuario com id correspondente e o atualizamos
+	var ind int
+	for i := range usuarios {
+		if usuarios[i].Id == id {
+			ind = i
+			usuarios[i].Nome = name
+			updated = true
+		}
+	}
+	if !updated {
+		return Usuario{}, fmt.Errorf("Usuario %d nao encontrado", id)
+	}
+	// gravamos no arquivo novamente com o usuario atualizado
+	err := r.db.Write(usuarios)
+	if err != nil {
+		return Usuario{}, err
+	}
+	return usuarios[ind], nil
+
 }
 
 func (r *FileRepository) LastID() (uint64, error) {

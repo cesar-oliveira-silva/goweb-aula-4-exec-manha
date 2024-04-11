@@ -8,6 +8,7 @@ import (
 	"github.com/cesar-oliveira-silva/goweb-aula-4-exec-manha.git/project/cmd/server/handler"
 	"github.com/cesar-oliveira-silva/goweb-aula-4-exec-manha.git/project/internal/usuarios"
 	"github.com/cesar-oliveira-silva/goweb-aula-4-exec-manha.git/project/pkg/store"
+	"github.com/cesar-oliveira-silva/goweb-aula-4-exec-manha.git/project/pkg/web"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -19,9 +20,10 @@ func TokenMiddleware(ctx *gin.Context) {
 	token := ctx.GetHeader("token")
 	if token != tokenEnvironment {
 		// status StatusUnauthorized equivalente ao 401
-		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-			"error": "token inválido",
-		})
+		// ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+		// 	"error": "token inválido",
+		// })
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, web.NewResponse(http.StatusBadRequest, nil, "Erro: Token invalido"))
 		return
 	}
 	ctx.Next()
